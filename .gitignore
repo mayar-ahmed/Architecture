@@ -1,0 +1,8 @@
+work/*
+processor.cr.mti
+processor.mpf
+sim.do
+test.vhd.bak
+test.vhd
+vsim.wlf
+transcript

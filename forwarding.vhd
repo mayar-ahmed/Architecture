@@ -1,0 +1,26 @@
+LIBRARY IEEE;
+USE IEEE.std_logic_1164.all;
+ENTITY forwarding is
+PORT (
+mem_wb_rda, ex_mem_rda, id_ex_rs1a,id_ex_rs2a  : IN std_logic_vector (2 DOWNTO 0);
+mem_wb_rdc, ex_mem_rdc , id_ex_rsc,id_ex_rtc : IN std_logic ;
+f11,f12,f21,f22 : OUT std_logic
+);
+END forwarding;
+ARCHITECTURE fu_STRUCT OF forwarding IS
+
+BEGIN
+
+f11 <= '1' when (id_ex_rsc = '1')  and (ex_mem_rdc= '1') and (id_ex_rs1a = ex_mem_rda) 
+	 else '0';
+f12 <= '1' when (id_ex_rsc='1') and (mem_wb_rdc ='1') and (id_ex_rs1a = mem_wb_rda)
+	else '0';
+
+f21 <= '1' when (id_ex_rtc = '1')  and (ex_mem_rdc= '1') and (id_ex_rs2a = ex_mem_rda) 
+	 else '0';
+f22 <= '1' when (id_ex_rtc='1') and (mem_wb_rdc ='1') and (id_ex_rs2a = mem_wb_rda)
+	else '0';
+
+
+
+END fu_STRUCT;	 

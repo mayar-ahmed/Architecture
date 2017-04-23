@@ -6,3 +6,6 @@ test.vhd.bak
 test.vhd
 vsim.wlf
 transcript
+hazard_unit.vhd.bak
+forwarding.vhd.bak
+cu.vhd.bak

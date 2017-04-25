@@ -22,9 +22,9 @@ ARCHITECTURE mem_a OF Memory IS
 			BEGIN
 				IF falling_edge(clk) THEN  
 					IF we = '1' THEN
-						mem(to_integer(signed(address))) <= datain;
+						mem(to_integer(unsigned(address))) <= datain;
 					ELSIF re = '1' THEN
-				    dataout <= mem(to_integer(signed(address)));
+				    dataout <= mem(to_integer(unsigned(address)));
 				  ELSE
 				     dataout <= (others=>'0');   	  
 					END IF;

@@ -11,7 +11,7 @@ BEGIN
 	PROCESS(clk,Rst)
 	BEGIN
 		IF(Rst = '1') THEN
-    		    q <= "1111111111111111";
+    		    q <= "0000001111111111";
 		ELSIF (rising_edge(clk)and En='1') THEN
  	 	   q <= d;
 		END IF;

@@ -20,7 +20,7 @@ ARCHITECTURE mem_a OF Memory IS
 	BEGIN
 		PROCESS(clk) IS
 			BEGIN
-				IF falling_edge(clk) THEN  
+				IF rising_edge(clk) THEN  
 					IF we = '1' THEN
 						mem(to_integer(unsigned(address))) <= datain;
 					ELSIF re = '1' THEN

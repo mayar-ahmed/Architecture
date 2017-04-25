@@ -12,7 +12,6 @@ f : OUT std_logic_vector (15 DOWNTO 0)
 );
 END SH_ROT;
 
-
 ARCHITECTURE SH_Rot OF SH_ROT IS
   signal y: std_logic_vector (15 DOWNTO 0);  
   signal temp: std_logic_vector (15 DOWNTO 0);  

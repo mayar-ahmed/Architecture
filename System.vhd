@@ -187,9 +187,6 @@ END COMPONENT;
 	   -- MemReg- RegWrite-MemData(16)-ALUResult(16)-InSignal-Inport(16)-DataOut(16)
 	  WB: WriteBackStage PORT MAP(clk,MemWbOut(36),MemWbOut(37),MemWbOut(34 downto 19),MemWbOut(18 downto 3),MemWbOut(38),IN_PORT,D); 
 	    
-		--PROCESS(clk) IS
-			--BEGIN
-		--END PROCESS;
 		
 END sys_a;
 

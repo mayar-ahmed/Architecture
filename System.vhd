@@ -96,6 +96,13 @@ COMPONENT stage2 IS
 		Rs1D,Rs2D,Reg6: OUT std_logic_vector(15 DOWNTO 0));
 END COMPONENT;
 
+Component mux2 IS  
+ GENERIC (n : integer := 16);
+		PORT (a, b: IN  std_logic_vector(n-1 DOWNTO 0);
+			S0: in std_logic;
+		      x       : OUT std_logic_vector(n-1 DOWNTO 0));    
+END component;
+
 
   SIGNAL Stall, IfIdEn: std_logic;
   SIGNAL IfIdIn, IfIdOut : std_logic_vector(45 downto 0);
@@ -106,12 +113,12 @@ END COMPONENT;
   SIGNAL PCJ: std_logic_vector(15 downto 0); --Execution Component
 --  SIGNAL A : STD_LOGIC_VECTOR(2 DOWNTO 0);
   SIGNAL D : STD_LOGIC_VECTOR(15 DOWNTO 0);
- -- SIGNAL C : STD_LOGIC;
+ SIGNAL s_flush : STD_LOGIC; --selection line for flush
   SIGNAL Stage4Out : std_logic_vector(15 downto 0);
   SIGNAL Stage3Out : std_logic_vector(15 downto 0);
   SIGNAL Stage1Out,PC,PC1 : std_logic_vector(15 downto 0);
   Signal RS1D,RS2D,R6 : std_logic_vector(15 downto 0);
-  signal CS :std_logic_vector (26 downto 0);
+  signal CS,flush_out,zeros :std_logic_vector (26 downto 0);
   -- from EX component
   SIGNAL JUMP_ID_EX: Std_logic;
   SIGNAL OutPort : std_logic_vector(15 downto 0);
@@ -133,6 +140,13 @@ END COMPONENT;
 	    ---------------------------Stage 2 ---------------------------------------------------------
 	   control_unit : CU port map (IfIdOut(13 downto 9) , CS);
 	     --control_unit : CU port map (I , CS);
+
+	--hazards and flushing output
+	--a :cs, b:zero, so:ex_mem ret or exmem_rti or jmp_id_ex, id_ex_call, flush_imm, x:muxout
+	zeros <= (others =>'0');
+	s_flush <= '1' when(stall='1') or (ExMemOut(104)='1') or (ExMemOut(105) ='1') or (JUMP_ID_EX='1') or (IdExOut(119)='1') or (IdExOut(127)='1')
+		else '0';
+	flush_mux : mux2 GENERIC MAP (27) PORT MAP (CS,zeros, s_flush, flush_out);
 	      
 	    stage_2: stage2 PORT MAP (INTR,Clk,CS(16),CS(17),CS(14),CS(15),CS(21),MemWbOut(37),RESET,D,IfIdOut(29 DOWNTO 14),MemWbOut(2 downto 0),IfIdOut(8 downto 6),IfIdOut(5 downto 3),RS1D,RS2D,R6);
 	  -- Rs1A(8-6) - Rs2A(5-3) - RdA(2-0) - Rs1D(9-24) - Rs2D(25-40) - R6(41-56) - PC(57-72) - PC_UP(73-88) - Imm(89-104)- CS(105-131)
@@ -143,7 +157,7 @@ END COMPONENT;
 	     IdExIn(72 downto 57) <= IfIdOut(29 downto 14);
 	     IdExIn(88 downto 73) <= IfIdOut(45 downto 30);
 	     IdExIn(104 downto 89) <= Stage1Out;--immediate
-	     IdExIn(131 downto 105)<=CS;
+	     IdExIn(131 downto 105)<=flush_out;
 	  ID_EX: my_nDFF GENERIC MAP (132) PORT MAP (CLK,RESET,'1',IdExIn,IdExOut);
 	    
 	  ---------------------------------Stage 3 --------------------------------------------------------

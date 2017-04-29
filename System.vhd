@@ -58,7 +58,7 @@ COMPONENT MemoryStage IS
 		Rs1D: IN  std_logic_vector(15 DOWNTO 0);
 		PC: IN  std_logic_vector(15 DOWNTO 0);
 		PC_UP: IN  std_logic_vector(15 DOWNTO 0);
-		DataOut : OUT  std_logic_vector(15 DOWNTO 0));
+		DataOut, m0,m1 : OUT  std_logic_vector(15 DOWNTO 0));
 		 
 END COMPONENT;
 
@@ -82,8 +82,8 @@ END COMPONENT;
 
 COMPONENT stage1 IS  
 	PORT (
-		INT,Rst,Clk,JUMP,CALL,RET,RTI,stall: IN std_logic;
-		PCJ,PC3: IN std_logic_vector(15 DOWNTO 0);
+		INT,Rst,Clk,JUMP,CALL,RET,RTI,stall,jmp_ex_mem, call_ex_mem,mem_wb_ret,mem_wb_rti: IN std_logic;
+		PCJ,PC3,m0,m1: IN std_logic_vector(15 DOWNTO 0);
 		IF_ID_ins_in,PC,PC1: OUT std_logic_vector(15 DOWNTO 0));
 END COMPONENT;
 
@@ -107,8 +107,8 @@ END component;
   SIGNAL Stall, IfIdEn: std_logic;
   SIGNAL IfIdIn, IfIdOut : std_logic_vector(45 downto 0);
   SIGNAL IdExIn, IdExOut : std_logic_vector(131 downto 0);
-  SIGNAL ExMemIn, ExMemOut : std_logic_vector(110 downto 0);
-  SIGNAL MemWbIn, MemWbOut : std_logic_vector(38 downto 0);
+  SIGNAL ExMemIn, ExMemOut : std_logic_vector(111 downto 0);
+  SIGNAL MemWbIn, MemWbOut : std_logic_vector(40 downto 0);
   SIGNAL Prt: std_logic_vector(15 downto 0); 
   SIGNAL PCJ: std_logic_vector(15 downto 0); --Execution Component
 --  SIGNAL A : STD_LOGIC_VECTOR(2 DOWNTO 0);
@@ -121,14 +121,14 @@ END component;
   signal CS,flush_out,zeros :std_logic_vector (26 downto 0);
   -- from EX component
   SIGNAL JUMP_ID_EX: Std_logic;
-  SIGNAL OutPort : std_logic_vector(15 downto 0);
+  SIGNAL OutPort,mem0,mem1 : std_logic_vector(15 downto 0);
   
 	BEGIN
 	  
 	  -- INTR -RESET - JMP - Call - Ret - Rti - stall
 	  --stage_1: stage1 PORT MAP (INTR,RESET,CLK,JUMP_ID_EX,IdExOut(135),ExMemOut(14),ExMemOut(20),Stall,PCJ,PC3,IF_ID_ins_in,PC,PC1);
 	    -- opcode(13-9) - Rs1A(8-6) - Rs2A(5-3) - RdA(2-0) - PC(14-29) - PC_UP(30-45)
-	    stage_1: stage1 PORT MAP (INTR,Reset,Clk,JUMP_ID_EX,IdExOut(119),ExMemOut(104),ExMemOut(105),Stall,PCJ,Stage4Out,Stage1Out,PC,PC1);
+	    stage_1: stage1 PORT MAP (INTR,Reset,Clk,JUMP_ID_EX,IdExOut(119),ExMemOut(104),ExMemOut(105),Stall,ExMemOut(111),ExMemOut(102),MemWbOut(39),MemWbOut(40),PCJ,Stage4Out,mem0,mem1,Stage1Out,PC,PC1);
 
 	  IF_ID: my_nDFF GENERIC MAP (46) PORT MAP (CLK,RESET,IfIdEn,IfIdIn,IfIdOut);
 	  IfIdIn(13 DOWNTO 0)<=Stage1Out(15 DOWNTO 2);
@@ -136,7 +136,6 @@ END component;
     	IfIdIn(45 DOWNTO 30)<=PC1;
     	IfIdEn <= not stall;
     
-
 	    ---------------------------Stage 2 ---------------------------------------------------------
 	   control_unit : CU port map (IfIdOut(13 downto 9) , CS);
 	     --control_unit : CU port map (I , CS);
@@ -184,20 +183,24 @@ END component;
 	  ExMemIn(108)<=IdExOut(117);
 	  ExMemIn(109)<=IdExOut(118); --RegWrite
 	  ExMemIn(110)<=IdExOut(124);
+	  ExMemIn(111) <= JUMP_ID_EX;
 	    -------------------------------EX/MEM Buffer-------------------------------------------------------------------
 	  -- RdA(0-2) - Rs1D(3-18) - PC(19-34) - PC_UP(35-50) - Imm(51-66) - R6(67-82) - ALURes(83-98) - (12)CS(99-110)
-	  -- (MemRead 99 - MemWrite 100 - INT 101- Call 102- Push 103- Ret 104- Rti 105- Pop 106- Rdc 107- MemReg 108- RegWrite 109- InSignal 110)
-	  EX_MEM: my_nDFF GENERIC MAP (111) PORT MAP (CLK,RESET,'1',ExMemIn,ExMemOut);
+	  -- (MemRead 99 - MemWrite 100 - INT 101- Call 102- Push 103- Ret 104- Rti 105- Pop 106- Rdc 107- MemReg 108- RegWrite 109- InSignal 110 - jump 111)
+	  EX_MEM: my_nDFF GENERIC MAP (112) PORT MAP (CLK,RESET,'1',ExMemIn,ExMemOut);
 	  ---------------------------Stage 4----------------------------------
-	  MEM : MemoryStage port map (CLK,ExMemOut(99),ExMemOut(100),ExMemOut(101),ExMemOut(102),ExMemOut(103),ExMemOut(106),ExMemOut(104),ExMemOut(105),ExMemOut(66 downto 51),ExMemOut(82 downto 67),ExMemOut(18 downto 3),ExMemOut(34 downto 19),ExMemOut(50 downto 35),Stage4Out);  
+	  MEM : MemoryStage port map (CLK,ExMemOut(99),ExMemOut(100),ExMemOut(101),ExMemOut(102),ExMemOut(103),ExMemOut(106),ExMemOut(104),ExMemOut(105),ExMemOut(66 downto 51),ExMemOut(82 downto 67),ExMemOut(18 downto 3),ExMemOut(34 downto 19),ExMemOut(50 downto 35),Stage4Out,mem0,mem1);  
 --	 RdA(0-2) - ALURes(3-18) - MemData(19-34)  
 	  MemWbIn(2 downto 0) <= ExMemOut(2 downto 0);
 	  MemWbIn(18 downto 3) <= ExMemOut(98 downto 83);
 	  MemWbIn(34 downto 19) <= Stage4Out;
---	 38 InSignal - 37 RegWrite - 36 MemReg - 35 Rdc
+--	 40-rti 39-ret -38 InSignal - 37 RegWrite - 36 MemReg - 35 Rdc
 	  MemWbIn(38 downto 35) <= ExMemOut(110 downto 107);
+          MemWbIn(39)<= ExMemOut(104);
+	MemWbIn(40)<= ExMemOut(105);
+
 	  --------------------------MEM/WB Buffer---------------------------------
-	  MEM_WB: my_nDFF GENERIC MAP (39) PORT MAP (CLK,RESET,'1',MemWbIn,MemWbOut); 
+	  MEM_WB: my_nDFF GENERIC MAP (41) PORT MAP (CLK,RESET,'1',MemWbIn,MemWbOut); 
 	   -- MemReg- RegWrite-MemData(16)-ALUResult(16)-InSignal-Inport(16)-DataOut(16)
 	  WB: WriteBackStage PORT MAP(clk,MemWbOut(36),MemWbOut(37),MemWbOut(34 downto 19),MemWbOut(18 downto 3),MemWbOut(38),IN_PORT,D); 
 	    

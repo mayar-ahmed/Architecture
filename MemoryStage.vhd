@@ -18,7 +18,7 @@ ENTITY MemoryStage IS
 		Rs1D: IN  std_logic_vector(15 DOWNTO 0);
 		PC: IN  std_logic_vector(15 DOWNTO 0);
 		PC_UP: IN  std_logic_vector(15 DOWNTO 0);
-		DataOut : OUT  std_logic_vector(15 DOWNTO 0));
+		DataOut,m0,m1 : OUT  std_logic_vector(15 DOWNTO 0));
 		 
 END ENTITY MemoryStage;
 
@@ -34,14 +34,16 @@ ARCHITECTURE memStage_a OF MemoryStage IS
 		we  : IN std_logic;
 		address : IN  std_logic_vector(15 DOWNTO 0);
 		datain  : IN  std_logic_vector(15 DOWNTO 0);
-		dataout : OUT std_logic_vector(15 DOWNTO 0));
+		dataout, m0, m1 : OUT std_logic_vector(15 DOWNTO 0));
   END COMPONENT;
   
-  COMPONENT mux2 IS  
-		PORT (a, b: IN  std_logic_vector(15 DOWNTO 0);
+  
+component mux2 IS  
+ GENERIC (n : integer := 16);
+		PORT (a, b: IN  std_logic_vector(n-1 DOWNTO 0);
 			S0: in std_logic;
-		      x       : OUT std_logic_vector(15 DOWNTO 0));    
-  END COMPONENT;
+		      x       : OUT std_logic_vector(n-1 DOWNTO 0));    
+END component;
   
   COMPONENT mux4 IS 
 	 GENERIC (n : integer := 16);
@@ -51,13 +53,13 @@ ARCHITECTURE memStage_a OF MemoryStage IS
 END COMPONENT;
 Signal selec : std_logic_vector(1 downto 0);
 	BEGIN
-	  AddSel <= Call OR Push OR Ret OR Rti OR Pop;
-	  muxAdd: mux2 port map(Imm,R6,AddSel,MemAddress);
+	  AddSel <= '1' when ((call='1') OR (Push='1') OR (Ret='1') OR (Rti='1') OR (Pop='1')) else '0';
+	  muxAdd: mux2 generic map(16) port map(Imm,R6,AddSel,MemAddress);
 	    selec(0) <= Call;
 	    selec(1) <= Int;
-	  muxData: mux4 GENERIC map(16) port map(Rs1D,PC_UP,PC,"0000000000000000",selec,MemData);
+	  	muxData: mux4 GENERIC map(16) port map(Rs1D,PC,PC_UP,"0000000000000000",selec,MemData);
 	  
-    mem: Memory port map(clk,MemRead,MemWrite,MemAddress,MemData,MemOut);
+    		mem: Memory port map(clk,MemRead,MemWrite,MemAddress,MemData,MemOut,m0,m1);
 	  DataOut <= MemOut;
 	  --RdASig <= RdA;
 	  --RdAOut <= RdASig;

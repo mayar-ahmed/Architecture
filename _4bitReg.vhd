@@ -13,7 +13,7 @@ BEGIN
 	BEGIN
 	  IF(Rst = '1') THEN
     		    q <= "0000";
-		ELSIF (rising_edge(clk)and En='1') THEN
+		ELSIF (falling_edge(clk)and En='1') THEN
  	 	   q <= d;
 		END IF;
 	END PROCESS;

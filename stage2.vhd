@@ -68,6 +68,7 @@ signal R3: std_logic_vector(15 DOWNTO 0);
 signal R4: std_logic_vector(15 DOWNTO 0);
 signal R5: std_logic_vector(15 DOWNTO 0);
 signal R6: std_logic_vector(15 DOWNTO 0);
+signal R6_mux_select : std_logic;
 
 
 
@@ -95,7 +96,8 @@ none<=inc xnor (PUSH or CALL or INT);
 R6_en<=POP or PUSH or RET OR RTI OR CALL OR INT;
 r6A: R6Alu PORT MAP (R6_OUT,'1',inc,none,R6Alu_OUT);
 r6reg: Reg_R6 PORT MAP (Rst,Clk,R6_en,R6Alu_OUT,R6_OUT);
-mR6: mux2 GENERIC MAP (16) PORT MAP (R6_OUT,R6Alu_OUT,POP,R6); 
+
+mR6: mux2 GENERIC MAP (16) PORT MAP (R6_OUT,R6Alu_OUT,inc,R6); 
 
 ------------------------------------Decoders------------------------------
 Ds1: RdDec PORT MAP ('1',Rs1A,Src1_Dec); --source 1 decoder

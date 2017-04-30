@@ -32,6 +32,8 @@ vsim -gui work.system
 # Loading work.memorystage(memstage_a)
 # Loading work.memory(mem_a)
 # Loading work.writebackstage(wb_a)
+
+
 add wave  \
 sim:/system/CLK \
 sim:/system/RESET \
@@ -64,17 +66,20 @@ sim:/system/s_flush \
 sim:/system/flush_out \
 sim:/system/JUMP_ID_EX \
 sim:/system/OutPort
+
+add wave -position insertpoint sim:/system/stage_1/*
 force -freeze sim:/system/CLK 1 0, 0 {50 ps} -r 100
 mem load -filltype value -filldata 0 -fillradix symbolic -skip 0 /system/stage_1/INS_MEM/instruction
-mem load -filltype value -filldata 0000000000000001 -fillradix symbolic /system/stage_1/INS_MEM/instruction(0)
-mem load -filltype value -filldata 1100000100000000 -fillradix symbolic /system/stage_1/INS_MEM/instruction(1)
-mem load -filltype value -filldata 0010001001010100 -fillradix symbolic /system/stage_1/INS_MEM/instruction(2)
-mem load -filltype value -filldata 0000100101001100 -fillradix symbolic /system/stage_1/INS_MEM/instruction(32)
-mem load -filltype value -filldata 1100100000000000 -fillradix symbolic /system/stage_1/INS_MEM/instruction(33)
+mem load -filltype value -filldata 0010000101001100 -fillradix symbolic /system/stage_1/INS_MEM/instruction(0)
+mem load -filltype value -filldata 0000100101001100 -fillradix symbolic /system/stage_1/INS_MEM/instruction(1)
+mem load -filltype value -filldata 0001000101001100 -fillradix symbolic /system/stage_1/INS_MEM/instruction(16)
+mem load -filltype value -filldata 1101000000000000 -fillradix symbolic /system/stage_1/INS_MEM/instruction(17)
+mem load -filltype value -filldata 0001000101001100 -fillradix symbolic /system/stage_1/INS_MEM/instruction(18)
 
 
 mem load -filltype value -filldata 0 -fillradix symbolic -skip 0 /system/MEM/mem/mem
-mem load -filltype value -filldata {1111111111111111 } -fillradix symbolic /system/MEM/mem/mem(1023)
+mem load -filltype value -filldata 0000000000000000 -fillradix symbolic /system/MEM/mem/mem(0)
+mem load -filltype value -filldata 0000000000010000 -fillradix symbolic /system/MEM/mem/mem(1)
 force -freeze sim:/system/RESET 1 0
 force -freeze sim:/system/Stall 0 0
 run
@@ -84,7 +89,7 @@ run
 #    Time: 0 ps  Iteration: 1  Instance: /system/EX/ALUResult/ALU1
 force -freeze sim:/system/RESET 0 0
 force -freeze sim:/system/INTR 0 0
-run
+
 add wave  \
 sim:/system/stage_2/R0 \
 sim:/system/stage_2/R1 \

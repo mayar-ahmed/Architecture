@@ -53,7 +53,7 @@ END component;
 END COMPONENT;
 Signal selec : std_logic_vector(1 downto 0);
 	BEGIN
-	  AddSel <= '1' when ((call='1') OR (Push='1') OR (Ret='1') OR (Rti='1') OR (Pop='1')) else '0';
+	  AddSel <= '1' when ((call='1') OR (Push='1') OR (Ret='1') OR (Rti='1') OR (Pop='1') or (Int ='1')) else '0';
 	  muxAdd: mux2 generic map(16) port map(Imm,R6,AddSel,MemAddress);
 	    selec(0) <= Call;
 	    selec(1) <= Int;

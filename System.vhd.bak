@@ -122,6 +122,9 @@ END component;
   -- from EX component
   SIGNAL JUMP_ID_EX: Std_logic;
   SIGNAL OutPort,mem0,mem1 : std_logic_vector(15 downto 0);
+  signal ex_mem_flush  : std_logic; --selectiom for flushing ex/mem
+  signal ex_mem_flush_out,ex_mem_cs: std_logic_vector (12 downto 0); --output of flushing mux
+  
   
 	BEGIN
 	  
@@ -136,7 +139,6 @@ END component;
     	IfIdIn(45 DOWNTO 30)<=PC1;
     	IfIdEn <= not stall;
     
-
 	    ---------------------------Stage 2 ---------------------------------------------------------
 	   control_unit : CU port map (IfIdOut(13 downto 9) , CS);
 	     --control_unit : CU port map (I , CS);
@@ -148,7 +150,7 @@ END component;
 		else '0';
 	flush_mux : mux2 GENERIC MAP (27) PORT MAP (CS,zeros, s_flush, flush_out);
 	      
-	    stage_2: stage2 PORT MAP (INTR,Clk,CS(16),CS(17),CS(14),CS(15),CS(21),MemWbOut(37),RESET,D,IfIdOut(29 DOWNTO 14),MemWbOut(2 downto 0),IfIdOut(8 downto 6),IfIdOut(5 downto 3),RS1D,RS2D,R6);
+	    stage_2: stage2 PORT MAP (CS(20),Clk,CS(16),CS(17),CS(14),CS(15),CS(21),MemWbOut(37),RESET,D,IfIdOut(29 DOWNTO 14),MemWbOut(2 downto 0),IfIdOut(8 downto 6),IfIdOut(5 downto 3),RS1D,RS2D,R6);
 	  -- Rs1A(8-6) - Rs2A(5-3) - RdA(2-0) - Rs1D(9-24) - Rs2D(25-40) - R6(41-56) - PC(57-72) - PC_UP(73-88) - Imm(89-104)- CS(105-131)
 	  IdExIn(8 downto 0) <= IfIdOut(8 downto 0);
 	  IdExIn(24 downto 9) <= Rs1D;
@@ -164,6 +166,8 @@ END component;
 	  --LDM,Imm_Reg,Jmp,JZ,JN,JC,RTI,Int,OutSig -- EX_MEM_ALURes,D,Imm
 	  EX: Execute port map(CLK,RESET,'0','0','0','0',IdExOut(128),IdExOut(109),IdExOut(105),IdExOut(106),IdExOut(107),IdExOut(108),IdExOut(126),IdExOut(125),ExMemOut(98 downto 83),D,IdExOut(104 downto 89),IdExOut(113 downto 110),IdExOut(24 downto 9),IdExOut(40 downto 25),IdExOut(114),JUMP_ID_EX,OutPort,PCJ,Stage3Out);
 	  Tri: TriSt port map(IdExOut(123),OutPort,OUT_PORT);
+
+
 	  ExMemIn(2 downto 0)<=IdExOut(2 downto 0);
 	  ExMemIn(18 downto 3)<=IdExOut(24 downto 9);
 	  ExMemIn(34 downto 19)<=IdExOut(72 downto 57);
@@ -172,21 +176,43 @@ END component;
 	  ExMemIn(82 downto 67)<=IdExOut(56 downto 41);
 	  --ALUResult from Exectution 
 	  ExMemIn(98 downto 83)<= Stage3Out;
-	  ExMemIn(99)<=IdExOut(115);
-	  ExMemIn(100)<=IdExOut(116);
-	  ExMemIn(101)<=IdExOut(125);
-	  ExMemIn(102)<=IdExOut(119);
-	  ExMemIn(103)<=IdExOut(121);
-	  ExMemIn(104)<=IdExOut(120);
-	  ExMemIn(105)<=IdExOut(126);
-	  ExMemIn(106)<=IdExOut(122);
-	  ExMemIn(107)<=IdExOut(131);
-	  ExMemIn(108)<=IdExOut(117);
-	  ExMemIn(109)<=IdExOut(118); --RegWrite
-	  ExMemIn(110)<=IdExOut(124);
-	  ExMemIn(111) <= JUMP_ID_EX;
+
+--flushing ex-mem
+	--control signals from id/ex
+	  ex_mem_cs(0)<=IdExOut(115);
+	  ex_mem_cs(1)<=IdExOut(116);
+	  ex_mem_cs(2)<=IdExOut(125);
+	  ex_mem_cs(3)<=IdExOut(119);
+	  ex_mem_cs(4)<=IdExOut(121);
+	  ex_mem_cs(5)<=IdExOut(120);
+	  ex_mem_cs(6)<=IdExOut(126);
+	  ex_mem_cs(7)<=IdExOut(122);
+	  ex_mem_cs(8)<=IdExOut(131);
+	  ex_mem_cs(9)<=IdExOut(117);
+	  ex_mem_cs(10)<=IdExOut(118); --RegWrite
+	  ex_mem_cs(11)<=IdExOut(124);
+	 ex_mem_cs(12) <= JUMP_ID_EX;
+
+ex_mem_flush<=
+flush_ex_mux : mux2 GENERIC MAP (13) PORT MAP (ex_mem_cs,"0000000000000", ex_mem_flush, ex_mem_flush_out);
+	ExMemIn(111 downto 99) <=ex_mem_flush_out;
+-- 	ExMemIn(99)<=IdExOut(115);
+--	  ExMemIn(100)<=IdExOut(116);
+--	  ExMemIn(101)<=IdExOut(125);
+--	  ExMemIn(102)<=IdExOut(119);
+--	  ExMemIn(103)<=IdExOut(121);
+--	  ExMemIn(104)<=IdExOut(120);
+--	  ExMemIn(105)<=IdExOut(126);
+--	  ExMemIn(106)<=IdExOut(122);
+--	  ExMemIn(107)<=IdExOut(131);
+--	  ExMemIn(108)<=IdExOut(117);
+--	  ExMemIn(109)<=IdExOut(118); --RegWrite
+--	  ExMemIn(110)<=IdExOut(124);
+--	  ExMemIn(111) <= JUMP_ID_EX;
+
+
 	    -------------------------------EX/MEM Buffer-------------------------------------------------------------------
-	  -- RdA(0-2) - Rs1D(3-18) - PC(19-34) - PC_UP(35-50) - Imm(51-66) - R6(67-82) - ALURes(83-98) - (12)CS(99-110)
+	  -- RdA(0-2) - Rs1D(3-18) - PC(19-34) - PC_UP(35-50) - Imm(51-66) - R6(67-82) - ALURes(83-98) - (13)CS(99-111)
 	  -- (MemRead 99 - MemWrite 100 - INT 101- Call 102- Push 103- Ret 104- Rti 105- Pop 106- Rdc 107- MemReg 108- RegWrite 109- InSignal 110 - jump 111)
 	  EX_MEM: my_nDFF GENERIC MAP (112) PORT MAP (CLK,RESET,'1',ExMemIn,ExMemOut);
 	  ---------------------------Stage 4----------------------------------

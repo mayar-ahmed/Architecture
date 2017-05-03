@@ -69,19 +69,16 @@ sim:/system/OutPort
 
 add wave -position insertpoint sim:/system/stage_1/*
 force -freeze sim:/system/CLK 1 0, 0 {50 ps} -r 100
-mem load -filltype value -filldata 0 -fillradix symbolic -skip 0 /system/stage_1/INS_MEM/instruction
-mem load -filltype value -filldata 0010000101001100 -fillradix symbolic /system/stage_1/INS_MEM/instruction(0)
-mem load -filltype value -filldata 0000100101001100 -fillradix symbolic /system/stage_1/INS_MEM/instruction(1)
-mem load -filltype value -filldata 0001000101001100 -fillradix symbolic /system/stage_1/INS_MEM/instruction(16)
-mem load -filltype value -filldata 1101000000000000 -fillradix symbolic /system/stage_1/INS_MEM/instruction(17)
-mem load -filltype value -filldata 0001000101001100 -fillradix symbolic /system/stage_1/INS_MEM/instruction(18)
+mem load -i {/media/mayar/Not fun/year 3/semester 2/Arch/processor/inst1.mem} /system/stage_1/INS_MEM/instruction
 
 
 mem load -filltype value -filldata 0 -fillradix symbolic -skip 0 /system/MEM/mem/mem
 mem load -filltype value -filldata 0000000000000000 -fillradix symbolic /system/MEM/mem/mem(0)
 mem load -filltype value -filldata 0000000000010000 -fillradix symbolic /system/MEM/mem/mem(1)
+
+
 force -freeze sim:/system/RESET 1 0
-force -freeze sim:/system/Stall 0 0
+#force -freeze sim:/system/Stall 0 0
 run
 # ** Warning: NUMERIC_STD.TO_INTEGER: metavalue detected, returning 0
 #    Time: 0 ps  Iteration: 0  Instance: /system/stage_1/INS_MEM
@@ -98,9 +95,9 @@ sim:/system/stage_2/R3 \
 sim:/system/stage_2/R4 \
 sim:/system/stage_2/R5 \
 sim:/system/EX/FlagOUT
-force -freeze sim:/system/stage_2/R1 16'h0020 0
-force -freeze sim:/system/stage_2/R2 16'h0005 0
-force -freeze sim:/system/IN_PORT 16'h0008 0
+#force -freeze sim:/system/stage_2/R1 16'h0004 0
+#force -freeze sim:/system/stage_2/R2 16'h0005 0
+force -freeze sim:/system/IN_PORT 16'h0005 0
 
 add wave -position insertpoint  \
 sim:/system/stage_2/R6 \

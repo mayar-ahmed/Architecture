@@ -7,6 +7,7 @@ ENTITY stage2 IS
 		Write_Data,PC: IN std_logic_vector(15 DOWNTO 0);
 		Write_Address: IN std_logic_vector(2 DOWNTO 0);
 		Rs1A,Rs2A: IN std_logic_vector(2 DOWNTO 0);
+		R6_stop:std_logic;
 		Rs1D,Rs2D,Reg6: OUT std_logic_vector(15 DOWNTO 0));
 END ENTITY stage2;
 ARCHITECTURE  st2  OF stage2 IS
@@ -93,7 +94,7 @@ reg5: Reg PORT MAP (Rst,Clk,WB_Dec(5),Write_Data,R5);
 
 inc<=POP or RET or RTI;
 none<=inc xnor (PUSH or CALL or INT);
-R6_en<=POP or PUSH or RET OR RTI OR CALL OR INT;
+R6_en<=(POP or PUSH or RET OR RTI OR CALL OR INT) And (R6_stop) ;
 r6A: R6Alu PORT MAP (R6_OUT,'1',inc,none,R6Alu_OUT);
 r6reg: Reg_R6 PORT MAP (Rst,Clk,R6_en,R6Alu_OUT,R6_OUT);
 

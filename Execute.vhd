@@ -8,7 +8,7 @@ PORT   (Clk,Rst,f11,f12,f21,f22,LDM,Imm_Reg,Jmp,JZ,JN,JC,RTI,Int: IN std_logic;
         EX_MEM_ALURes,D,Imm: IN std_logic_vector(15 DOWNTO 0);
         ALUCode: IN std_logic_vector(3 DOWNTO 0);
         Rs1D,Rs2D: IN std_logic_vector(15 DOWNTO 0);
-        FlagEn : IN std_logic;
+        FlagEn,stop_flags : IN std_logic;
         JUMP: OUT std_logic;
         OUTPort,PCJ,ALURESOUT: OUT std_logic_vector(15 DOWNTO 0)
         -----------------------------------------------
@@ -57,8 +57,10 @@ component mux4 IS
 		   s : IN std_logic_vector (1 downto 0);
 		   y : OUT std_logic_vector (n-1 DOWNTO 0));
 END component;
+signal flage : std_logic;
 
 BEGIN
+	flage <= stop_flags and FlagEn;
   smux1 <= f12 & f11;
   S1Forward: mux4 PORT MAP(Rs1D,D,EX_MEM_ALURes,EX_MEM_ALURes,smux1,X);
   PCJ <= X;
@@ -68,7 +70,7 @@ BEGIN
   S2: mux2 PORT MAP(Y,Imm,Imm_Reg,b);
 	ALUResult: ALU PORT MAP (a,b,ALUCode,FlagOUT,ALUFlag,ALURes);
 	FlagMux: mux2_4bit PORT MAP(ALUFlag,PreservedOUT,RTI,FlagIN);
-  Flags: Reg4 PORT MAP (Rst,Clk,FlagEn,FlagIN,FlagOUT);  
+  Flags: Reg4 PORT MAP (Rst,Clk,flage,FlagIN,FlagOUT);  
   PreservedFlags: Reg4 PORT MAP (Rst,Clk,Int,FlagOUT,PreservedOUT);  
  -- PortValue: TriSt PORT MAP(OutSig,X,OUTPort);
     

@@ -69,12 +69,16 @@ sim:/system/OutPort
 
 add wave -position insertpoint sim:/system/stage_1/*
 force -freeze sim:/system/CLK 1 0, 0 {50 ps} -r 100
-mem load -i {/media/mayar/Not fun/year 3/semester 2/Arch/processor/inst1.mem} /system/stage_1/INS_MEM/instruction
+mem load -i {/media/mayar/Not fun/year 3/semester 2/Arch/processor/inst3.mem} /system/stage_1/INS_MEM/instruction
 
 
 mem load -filltype value -filldata 0 -fillradix symbolic -skip 0 /system/MEM/mem/mem
 mem load -filltype value -filldata 0000000000000000 -fillradix symbolic /system/MEM/mem/mem(0)
 mem load -filltype value -filldata 0000000000010000 -fillradix symbolic /system/MEM/mem/mem(1)
+mem load -filltype value -filldata 10 -fillradix decimal /system/MEM/mem/mem(2)
+mem load -filltype value -filldata 20 -fillradix decimal /system/MEM/mem/mem(3)
+mem load -filltype value -filldata 30 -fillradix decimal /system/MEM/mem/mem(4)
+mem load -filltype value -filldata 40 -fillradix decimal /system/MEM/mem/mem(5)
 
 
 force -freeze sim:/system/RESET 1 0

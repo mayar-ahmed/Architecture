@@ -82,7 +82,7 @@ END COMPONENT;
 
 COMPONENT stage1 IS  
 	PORT (
-		INT,Rst,Clk,JUMP,CALL,RET,RTI,stall,jmp_ex_mem, call_ex_mem,mem_wb_ret,mem_wb_rti: IN std_logic;
+		INT,ID_EX_INT, CU_INT,Rst,Clk,JUMP,CALL,RET,RTI,stall,jmp_ex_mem, call_ex_mem,mem_wb_ret,mem_wb_rti: IN std_logic;
 		PCJ,PC3,m0,m1: IN std_logic_vector(15 DOWNTO 0);
 		IF_ID_ins_in,PC,PC1: OUT std_logic_vector(15 DOWNTO 0));
 END COMPONENT;
@@ -143,6 +143,8 @@ END component;
   signal f11,f12,f21,f22 :std_logic; --forwarding mux selectors
   signal stage3_in : std_logic_vector (15 downto 0); --input of forwarding mux in stage 3
   signal stop_r6,stop_flags,stall_temp: std_logic; --if instruction is going to be flushed don't modify r6 or flags
+  signal jmp_int, call_int,pc_select :std_logic;
+  signal id_pc :std_logic_vector(15 downto 0);
   
 	
 
@@ -153,7 +155,7 @@ END component;
 	  -- INTR -RESET - JMP - Call - Ret - Rti - stall
 	  --stage_1: stage1 PORT MAP (INTR,RESET,CLK,JUMP_ID_EX,IdExOut(135),ExMemOut(14),ExMemOut(20),Stall,PCJ,PC3,IF_ID_ins_in,PC,PC1);
 	    -- opcode(13-9) - Rs1A(8-6) - Rs2A(5-3) - RdA(2-0) - PC(14-29) - PC_UP(30-45)
-	    stage_1: stage1 PORT MAP (INTR,Reset,Clk,JUMP_ID_EX,IdExOut(119),ExMemOut(104),ExMemOut(105),Stall,ExMemOut(111),ExMemOut(102),MemWbOut(39),MemWbOut(40),PCJ,Stage4Out,mem0,mem1,Stage1Out,PC,PC1);
+	    stage_1: stage1 PORT MAP (INTR,IdExOut(125),CS(20),Reset,Clk,JUMP_ID_EX,IdExOut(119),ExMemOut(104),ExMemOut(105),Stall,ExMemOut(111),ExMemOut(102),MemWbOut(39),MemWbOut(40),PCJ,Stage4Out,mem0,mem1,Stage1Out,PC,PC1);
 
 	  IF_ID: my_nDFF GENERIC MAP (62) PORT MAP (CLK,RESET,IfIdEn,IfIdIn,IfIdOut);
 	  IfIdIn(13 DOWNTO 0)<=Stage1Out(15 DOWNTO 2);
@@ -166,16 +168,25 @@ END component;
 	   control_unit : CU port map (IfIdOut(13 downto 9) , CS);
 	     --control_unit : CU port map (I , CS);
 
-	stop_r6<=Not(JUMP_ID_EX or IdExOut(119) or IdExOut(120) or IdExOut(126) or ExMemOut(104) or ExMemOut(105) or IdExOut(127));
+	stop_r6<=Not(call_int or jmp_int or IdExOut(120) or IdExOut(126) or ExMemOut(104) or ExMemOut(105) or IdExOut(127));
 	
 	--hazards and flushing output
 	--a :cs, b:zero, so:ex_mem ret or exmem_rti or jmp_id_ex, id_ex_call, flush_imm, x:muxout
 	hazard_detecttion : hazard_unit port map (IfIdOut(8 downto 6),IfIdOut(5 downto 3), IdExOut(2 downto 0), CS(24), CS(25),IdExOut(115),stall_temp);
 	stall<= stall_temp and (not IdExOut(127));
 	zeros <= (others =>'0');
-	s_flush <= '1' when(stall='1') or (ExMemOut(104)='1') or (ExMemOut(105) ='1') or (JUMP_ID_EX='1') or (IdExOut(119)='1') or (IdExOut(127)='1')
+
+	--to prevent id/ex from flushing if there's an interupt
+	
+	jmp_int <= '1'when (JUMP_ID_EX='1') and (CS(20) ='0') else '0'; 
+	call_int <='1' when(IdExOut(119)='1') and (CS(20) ='0') else '0';
+
+	s_flush <= '1' when(stall='1') or (ExMemOut(104)='1') or (ExMemOut(105) ='1') or (jmp_int='1') or (call_int='1') or (IdExOut(127)='1')
 		else '0';
 	flush_mux : mux2 GENERIC MAP (27) PORT MAP (CS,zeros, s_flush, flush_out);
+
+	pc_select<= CS(20) and (JUMP_ID_EX or IdExOut(119));
+	pc_mux: mux2 GENERIC MAP (16) PORT MAP (IfIdOut(29 downto 14),PCJ, pc_select, id_pc);
 	      
 	    stage_2: stage2 PORT MAP (CS(20),Clk,CS(16),CS(17),CS(14),CS(15),CS(21),MemWbOut(37),RESET,D,IfIdOut(29 DOWNTO 14),MemWbOut(2 downto 0),IfIdOut(8 downto 6),IfIdOut(5 downto 3),stop_r6,RS1D,RS2D,R6);
 	  -- Rs1A(8-6) - Rs2A(5-3) - RdA(2-0) - Rs1D(9-24) - Rs2D(25-40) - R6(41-56) - PC(57-72) - PC_UP(73-88) - Imm(89-104)- CS(105-131)
@@ -183,7 +194,7 @@ END component;
 	  IdExIn(24 downto 9) <= Rs1D;
 	   IdExIn(40 downto 25) <= Rs2D;
 	    IdExIn(56 downto 41) <= R6;
-	     IdExIn(72 downto 57) <= IfIdOut(29 downto 14);
+	     IdExIn(72 downto 57) <= id_pc;
 	     IdExIn(88 downto 73) <= IfIdOut(45 downto 30);
 	     IdExIn(104 downto 89) <= Stage1Out;--immediate
 	     IdExIn(131 downto 105)<=flush_out;

@@ -50,39 +50,7 @@ sim:/system/ExMemIn \
 sim:/system/ExMemOut \
 sim:/system/MemWbIn \
 sim:/system/MemWbOut \
-sim:/system/PCJ \
-sim:/system/D \
-sim:/system/Stage4Out \
-sim:/system/Stage3Out \
-sim:/system/Stage1Out \
-sim:/system/PC \
-sim:/system/PC1 \
-sim:/system/RS1D \
-sim:/system/RS2D \
-sim:/system/R6 \
-sim:/system/CS \
-sim:/system/s_flush \
-sim:/system/flush_out \
-sim:/system/JUMP_ID_EX \
-sim:/system/OutPort
-
-add wave -position insertpoint sim:/system/stage_1/*
-force -freeze sim:/system/CLK 1 0, 0 {50 ps} -r 100
-mem load -i {/media/mayar/Not fun/year 3/semester 2/Arch/processor/inst3.mem} /system/stage_1/INS_MEM/instruction
-
-
-mem load -filltype value -filldata 0 -fillradix symbolic -skip 0 /system/MEM/mem/mem
-mem load -filltype value -filldata 0000000000000000 -fillradix symbolic /system/MEM/mem/mem(0)
-mem load -filltype value -filldata 0000000000010000 -fillradix symbolic /system/MEM/mem/mem(1)
-
-
-
-force -freeze sim:/system/RESET 1 0
-
-run
-
-force -freeze sim:/system/RESET 0 0
-force -freeze sim:/system/INTR 0 0
+sim:/system/PC 
 
 add wave  \
 sim:/system/stage_2/R0 \
@@ -97,25 +65,102 @@ force -freeze sim:/system/IN_PORT 16'h0005 0
 
 add wave -position insertpoint  \
 sim:/system/stage_2/R6_OUT \
-sim:/system/stage_2/R6Alu_OUT
-add wave -position insertpoint  \
-sim:/system/stage_2/PUSH \
-sim:/system/stage_2/POP \
-sim:/system/stage_2/CALL \
-sim:/system/stage_2/RET \
-sim:/system/stage_2/RTI \
-sim:/system/stage_2/inc \
-sim:/system/stage_2/none \
+sim:/system/stage_2/R6Alu_OUT \
 sim:/system/stage_2/R6_en
 
-add wave -position insertpoint  \
-sim:/system/MEM/DataOut
-add wave -position insertpoint  \
-sim:/system/MEM/mem/address
-add wave -position insertpoint  \
-sim:/system/MEM/mem/dataout
-add wave -position insertpoint  \
-sim:/system/MEM/MemAddress
-add wave -position insertpoint  \
-sim:/system/MEM/MemOut
+
+
+force -freeze sim:/system/CLK 1 0, 0 {50 ps} -r 100
+mem load -i {/media/mayar/Not fun/year 3/semester 2/Arch/processor/inst.mem} /system/stage_1/INS_MEM/instruction
+
+
+mem load -filltype value -filldata 0 -fillradix symbolic -skip 0 /system/MEM/mem/mem
+mem load -filltype value -filldata 0000000000000000 -fillradix symbolic /system/MEM/mem/mem(0)
+mem load -filltype value -filldata 0000000000010000 -fillradix symbolic /system/MEM/mem/mem(1)
+
+
+
+force -freeze sim:/system/RESET 1 0
+
+run
+
+force -freeze sim:/system/RESET 0 0
+force -freeze sim:/system/INTR 0 0
+run
+run
+run
+run
+run
+run
+run
+run
+run
+run
+run
+run
+run
+run
+run
+# WARNING: No extended dataflow license exists
+run
+run
+run
+run
+run
+run
+force -freeze sim:/system/IN_PORT 1111111111111011 0
+run
+run
+run
+run
+run
+run
+run
+run
+run
+run
+run
+run
+run
+run
+run
+run
+run
+run
+run
+run
+run
+run
+run
+run
+force -freeze sim:/system/IN_PORT 1111111111111000 0
+run
+run
+run
+run
+run
+run
+run
+run
+# WARNING: No extended dataflow license exists
+run
+run
+run
+run
+run
+run
+run
+run
+run
+run
+run
+run
+run
+run
+run
+run
+run
+run
+#memory result =18 
+
 
